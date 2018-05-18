@@ -59,3 +59,15 @@ typings/
 
 # next.js build output
 .next
+/azIoT.Core.Apps.ConsoleApp/obj
+/azIoT.Core.Apps.ConsoleApp/bin/Debug/netcoreapp2.0
+/azIoT.Core.Device.WindowsWorkstation/obj
+/azIoT.Core.Device.WindowsWorkstation/bin/Debug/netcoreapp2.0
+/azIoT.Standard.Apps.Common/obj
+/azIoT.Standard.Apps.Common/bin/Debug/netstandard2.0
+/azIoT.Standard.Controller.Common/obj
+/packages
+/azIoT.Standard.Device.Common/obj
+/azIoT.Standard.Common/obj
+/.vs/azIoT/v15
+/.vs/config
