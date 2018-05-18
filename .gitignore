@@ -71,3 +71,5 @@ typings/
 /azIoT.Standard.Common/obj
 /.vs/azIoT/v15
 /.vs/config
+/azIoT.Standard.Common/bin/Debug/netstandard2.0
+/azIoT.Standard.Device.Common/bin/Debug/netstandard2.0
