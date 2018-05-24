@@ -73,3 +73,13 @@ typings/
 /.vs/config
 /azIoT.Standard.Common/bin/Debug/netstandard2.0
 /azIoT.Standard.Device.Common/bin/Debug/netstandard2.0
+/.vs/azIoT/DesignTimeBuild/.dtbcache
+/.vs/azIoT/v14/.suo
+/azIoT.Core.Apps.WebApi/bin/Debug/netcoreapp2.0
+/azIoT.Core.Apps.WebApi/obj
+/azIoT.Core.Device.WindowsWorkstation/bin/Release/netcoreapp2.0
+/azIoT.Core.Device.WindowsWorkstation/Properties/PublishProfiles
+/azIoT.Device.MobileApp
+/azIoT.Standard.Common/bin/Release/netstandard2.0
+/azIoT.Standard.Device.Common/bin/Release/netstandard2.0
+/azIoT.Device.MobileApp.sln

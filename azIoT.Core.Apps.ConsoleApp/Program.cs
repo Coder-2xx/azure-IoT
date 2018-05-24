@@ -34,6 +34,19 @@
                 string azureStorageConnectionString = _appConfig.GetConnectionString("AZURE_STORAGE");
                 string azureStorageContainerName = _appConfig["AZURE_STORAGE_CONTAINERNAME"];
 
+
+                RegistryManager registryManager = RegistryManager.CreateFromConnectionString("HostName=IoTHub-Akshay-US.azure-devices.net;SharedAccessKeyName=registryRead;SharedAccessKey=3hrCj6LtcuIsB9y0EVwcDnRAo6ePaCigWtTivBQYgBI=");
+
+                var devices = await registryManager.GetDevicesAsync(100); // Time 1 sek
+
+                foreach (var item in devices)
+                {
+                    Console.WriteLine("Divice id: " + item.Id + ", Connection state: " + item.ConnectionState);
+                }
+                //Console.WriteLine("\nNumber of devices: " + devices.());
+
+                serviceClient = ServiceClient.CreateFromConnectionString(_appConfig.GetConnectionString("IOTHUB"));
+
                 EventHubsConnectionStringBuilder eventHubConnectionStringBuilder = new EventHubsConnectionStringBuilder(iotHubEventHubConnectionString)
                 {
                     EntityPath = entityPath
@@ -85,12 +98,18 @@
                 while (true)
                 {
                     Console.ReadLine();
+                    string deviceId = _appConfig["DEVICE_ID"];
+                    CloudToDeviceMethod method = new CloudToDeviceMethod("lock");
+                    method.ResponseTimeout = TimeSpan.FromSeconds(30);
+                    CloudToDeviceMethodResult result = serviceClient.InvokeDeviceMethodAsync(deviceId, method).Result;
+
+                    _logger.LogTrace("lock is invoked.");
+
                     Message message = new Message(Encoding.ASCII.GetBytes("System lock message"));
                     message.Properties.Add(common.Constants.Command, "LOCK");
                     message.Properties.Add(common.Constants.CommandType, "session");
                     message.Properties.Add(common.Constants.SessionIdentity, "all");
 
-                    serviceClient = ServiceClient.CreateFromConnectionString(_appConfig.GetConnectionString("IOTHUB"));
                     serviceClient.SendAsync(_appConfig["DEVICE_ID"], message);
                 }
             }

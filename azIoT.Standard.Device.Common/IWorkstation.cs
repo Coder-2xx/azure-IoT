@@ -1,6 +1,5 @@
 ﻿namespace azIoT.Standard.Device.Common
 {
-    using Microsoft.Azure.Devices;
     using Microsoft.Azure.Devices.Client;
     using System;
     using System.Collections.Generic;

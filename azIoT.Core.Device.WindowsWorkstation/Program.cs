@@ -10,6 +10,7 @@
     using System;
     using System.Text;
     using azIoT.Standard.Device.Common;
+    using System.Threading.Tasks;
 
     class Program
     {
@@ -63,6 +64,8 @@
 
                 _deviceClient = DeviceClient.Create(iotHubHostName, new DeviceAuthenticationWithRegistrySymmetricKey(deviceId, deviceKey));
 
+                _deviceClient.SetMethodHandlerAsync("lock", onLock, null);
+
                 _logger.LogTrace(device_common.Constants.Messages.Device_Client_Initialized);
             }
             catch (Exception exception)
@@ -73,6 +76,13 @@
             {
 
             }
+        }
+
+        static Task<MethodResponse> onLock(MethodRequest methodRequest, object userContext)
+        {
+            _logger.LogTrace("Lock method is invoked by app");
+            workstation.ExecuteSystemCommand(null);
+            return Task.FromResult(new MethodResponse(Encoding.UTF8.GetBytes("locked"), 200));
         }
 
         static ServiceProvider ConfigureServices(IServiceCollection serviceCollection)
@@ -118,6 +128,7 @@
             {
                 Console.WriteLine("Press ENTER to exit");
                 Console.ReadLine();
+                _deviceClient.SetMethodHandlerAsync("lock", null, null);
                 NLog.LogManager.Shutdown();
             }
         }

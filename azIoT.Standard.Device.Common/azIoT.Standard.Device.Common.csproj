@@ -5,10 +5,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Azure.Devices" Version="1.6.0" />
     <PackageReference Include="Microsoft.Azure.Devices.Client" Version="1.7.1" />
     <PackageReference Include="Microsoft.Win32.SystemEvents" Version="4.5.0-rc1" />
     <PackageReference Include="NLog.Extensions.Logging" Version="1.0.2" />
     <PackageReference Include="System.Security.Principal.Windows" Version="4.4.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\azIoT.Standard.Common\azIoT.Standard.Common.csproj" />
   </ItemGroup>
 
 </Project>
