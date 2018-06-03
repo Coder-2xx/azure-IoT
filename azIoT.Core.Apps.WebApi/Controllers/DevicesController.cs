@@ -13,7 +13,7 @@ namespace azIoT.Core.Apps.WebApi.Controllers
 {
     [Produces("application/json")]
     [Route("api/[controller]")]
-    public class DevicesController : Controller
+    public class DevicesController : ControllerBase
     {
         private readonly ILogger<DevicesController> _logger;
         private readonly IDeviceService _deviceService;
@@ -35,28 +35,29 @@ namespace azIoT.Core.Apps.WebApi.Controllers
             return Ok(devices);
         }
 
-        [HttpPost, Route("send/{message}/to/{deviceId?}")]
-        public async Task<IActionResult> SendMessage([FromBody] IDictionary<string, string> properties, string message, string deviceId = null)
+        [HttpPost, Route("sendto/{deviceId?}")]
+        [ProducesResponseType(404)]
+        public async Task<IActionResult> SendMessage([FromBody] IoTDeviceMessage message, string deviceId = null)
         {
             _logger.LogTrace($"API CALL SendMessage");
 
             try
             {
-                await _deviceService.SendMessageAsync(message, deviceId, properties);
+                await _deviceService.SendMessageAsync(deviceId, message?.Text, message?.Properties);
             }
             catch (Exception exception)
             {
-
+                return NotFound();
             }
-            return Ok();
+            return Ok(true);
         }
 
         [HttpPost, Route("call/{operation}/on/{deviceId}")]
-        public async Task<IActionResult> CallOperation(string action, string deviceId)
+        public async Task<IActionResult> CallOperation(string operation, string deviceId)
         {
             _logger.LogTrace($"API CALL CallAction");
 
-            await _deviceService.CallMethodAsync(action, deviceId);
+            await _deviceService.CallMethodAsync(operation, deviceId);
 
             return Ok();
         }

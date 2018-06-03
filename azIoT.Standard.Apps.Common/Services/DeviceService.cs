@@ -49,7 +49,7 @@ namespace azIoT.Standard.Apps.Common.Services
             return devices;
         }
 
-        public async Task SendMessageAsync(string message, string deviceId, IDictionary<string, string> properties = null)
+        public async Task SendMessageAsync(string deviceId, string message, IDictionary<string, string> properties = null)
         {
             Message c2dMessage = new Message(Encoding.ASCII.GetBytes(message));
 

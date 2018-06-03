@@ -1,5 +1,6 @@
 ﻿namespace azIoT.Core.Controller.ConsoleApp
 {
+    using Microsoft.AspNetCore.SignalR.Client;
     using Microsoft.Azure.Devices;
     using Microsoft.Azure.EventHubs;
     using Microsoft.Azure.EventHubs.Processor;
@@ -15,7 +16,7 @@
     class Program
     {
         static ILogger _logger;
-        static IConfiguration _appConfig;
+        static IConfiguration _config;
 
         static ServiceClient serviceClient;
 
@@ -28,33 +29,55 @@
                 _logger = serviceProvider.GetService<ILoggerFactory>().CreateLogger<Program>();
                 _logger.LogTrace(common.Constants.Messages.Logger_Initialized);
 
-                string iotHubEventHubConnectionString = _appConfig.GetConnectionString("IOTHUB_EVENTHUB");
-                string entityPath = _appConfig["IOTHUB_ENDPOINT_ENTITYPATH"];
+                string iotHubEventHubConnectionString = _config.GetConnectionString("IOTHUB_EVENTHUB");
+                string entityPath = _config["IOTHUB_ENDPOINT_ENTITYPATH"];
 
-                string azureStorageConnectionString = _appConfig.GetConnectionString("AZURE_STORAGE");
-                string azureStorageContainerName = _appConfig["AZURE_STORAGE_CONTAINERNAME"];
+                string azureStorageConnectionString = _config.GetConnectionString("AZURE_STORAGE");
+                string azureStorageContainerName = _config["AZURE_STORAGE_CONTAINERNAME"];
 
 
-                RegistryManager registryManager = RegistryManager.CreateFromConnectionString("HostName=IoTHub-Akshay-US.azure-devices.net;SharedAccessKeyName=registryRead;SharedAccessKey=3hrCj6LtcuIsB9y0EVwcDnRAo6ePaCigWtTivBQYgBI=");
+                //RegistryManager registryManager = RegistryManager.CreateFromConnectionString("HostName=IoTHub-Akshay-US.azure-devices.net;SharedAccessKeyName=registryRead;SharedAccessKey=3hrCj6LtcuIsB9y0EVwcDnRAo6ePaCigWtTivBQYgBI=");
 
-                var devices = await registryManager.GetDevicesAsync(100); // Time 1 sek
+                //var devices = await registryManager.GetDevicesAsync(100); // Time 1 sek
 
-                foreach (var item in devices)
-                {
-                    Console.WriteLine("Divice id: " + item.Id + ", Connection state: " + item.ConnectionState);
-                }
+                //foreach (var item in devices)
+                //{
+                //    Console.WriteLine("Divice id: " + item.Id + ", Connection state: " + item.ConnectionState);
+                //}
                 //Console.WriteLine("\nNumber of devices: " + devices.());
 
-                serviceClient = ServiceClient.CreateFromConnectionString(_appConfig.GetConnectionString("IOTHUB"));
+                serviceClient = ServiceClient.CreateFromConnectionString(_config.GetConnectionString("IOTHUB"));
 
-                EventHubsConnectionStringBuilder eventHubConnectionStringBuilder = new EventHubsConnectionStringBuilder(iotHubEventHubConnectionString)
+                //EventHubsConnectionStringBuilder eventHubConnectionStringBuilder = new EventHubsConnectionStringBuilder(iotHubEventHubConnectionString)
+                //{
+                //    EntityPath = entityPath
+                //};
+
+                //EventProcessorHost eventProcessorHost = new EventProcessorHost(entityPath, PartitionReceiver.DefaultConsumerGroupName, iotHubEventHubConnectionString, azureStorageConnectionString, azureStorageContainerName);
+
+                //await eventProcessorHost.RegisterEventProcessorAsync<controller_common.EventProcessor>();
+
+                var notificationReceiver = serviceClient.GetFileNotificationReceiver();
+
+                Console.WriteLine("\nReceiving file upload notification from service");
+                while (true)
                 {
-                    EntityPath = entityPath
-                };
+                    var fileUploadNotification = await notificationReceiver.ReceiveAsync();
+                    if (fileUploadNotification == null) continue;
 
-                EventProcessorHost eventProcessorHost = new EventProcessorHost(entityPath, PartitionReceiver.DefaultConsumerGroupName, iotHubEventHubConnectionString, azureStorageConnectionString, azureStorageContainerName);
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine("Received file upload noticiation: {0}", string.Join(", ", fileUploadNotification.BlobName));
+                    Console.ResetColor();
 
-                await eventProcessorHost.RegisterEventProcessorAsync<controller_common.EventProcessor>();
+                    var connection = new HubConnectionBuilder()
+           .WithUrl(_config.GetValue<string>("LIVE_FEED_HUB_URI"))
+           .Build();
+
+                    connection.StartAsync().Wait();
+                    connection.InvokeAsync("SendMessage", $"File is uploaded at {fileUploadNotification.BlobUri}").Wait();
+
+                    await notificationReceiver.CompleteAsync(fileUploadNotification);
+                }
 
                 _logger.LogTrace(common.Constants.Messages.Logger_Initialized);
             }
@@ -82,7 +105,7 @@
         {
             try
             {
-                _appConfig = new ConfigurationBuilder()
+                _config = new ConfigurationBuilder()
                     .AddJsonFile("appconfig.json", true, true)
                     .Build();
 
@@ -98,7 +121,7 @@
                 while (true)
                 {
                     Console.ReadLine();
-                    string deviceId = _appConfig["DEVICE_ID"];
+                    string deviceId = _config["DEVICE_ID"];
                     CloudToDeviceMethod method = new CloudToDeviceMethod("lock");
                     method.ResponseTimeout = TimeSpan.FromSeconds(30);
                     CloudToDeviceMethodResult result = serviceClient.InvokeDeviceMethodAsync(deviceId, method).Result;
@@ -110,7 +133,7 @@
                     message.Properties.Add(common.Constants.CommandType, "session");
                     message.Properties.Add(common.Constants.SessionIdentity, "all");
 
-                    serviceClient.SendAsync(_appConfig["DEVICE_ID"], message);
+                    serviceClient.SendAsync(_config["DEVICE_ID"], message);
                 }
             }
         }

@@ -38,7 +38,7 @@
 
                     if (commandType.Equals(common.Constants.CommandTypes.Session, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        workstation.ExecuteSystemCommand(message);
+                        workstation.ExecuteSystemCommand(null);
                     }
 
                     await _deviceClient.CompleteAsync(message);
@@ -64,7 +64,13 @@
 
                 _deviceClient = DeviceClient.Create(iotHubHostName, new DeviceAuthenticationWithRegistrySymmetricKey(deviceId, deviceKey));
 
-                _deviceClient.SetMethodHandlerAsync("lock", onLock, null);
+                _deviceClient.SetMethodHandlerAsync(device_common.Constants.WorkstationCommands.LOCK, onLock, null);
+
+                _deviceClient.SetMethodHandlerAsync(device_common.Constants.WorkstationCommands.LOGOFF,
+onLock, null);
+
+                _deviceClient.SetMethodHandlerAsync(device_common.Constants.WorkstationCommands.CAPTURE_SCREEN,
+onScreenCapture, null);
 
                 _logger.LogTrace(device_common.Constants.Messages.Device_Client_Initialized);
             }
@@ -74,15 +80,22 @@
             }
             finally
             {
-
+                _deviceClient.Dispose();
             }
         }
 
         static Task<MethodResponse> onLock(MethodRequest methodRequest, object userContext)
         {
-            _logger.LogTrace("Lock method is invoked by app");
-            workstation.ExecuteSystemCommand(null);
-            return Task.FromResult(new MethodResponse(Encoding.UTF8.GetBytes("locked"), 200));
+            _logger.LogTrace($"Method Invoked - {device_common.Constants.WorkstationCommands.LOCK}");
+            workstation.ExecuteSystemCommand(device_common.Constants.WorkstationCommands.LOCK);
+            return Task.FromResult(new MethodResponse(Encoding.UTF8.GetBytes($"'{device_common.Constants.WorkstationCommands.LOCK}'"), 200));
+        }
+
+        static Task<MethodResponse> onScreenCapture(MethodRequest methodReq, object userContext)
+        {
+            _logger.LogTrace($"Method Invoked - {device_common.Constants.WorkstationCommands.CAPTURE_SCREEN}");
+            workstation.ExecuteSystemCommand(device_common.Constants.WorkstationCommands.CAPTURE_SCREEN);
+            return Task.FromResult(new MethodResponse(Encoding.UTF8.GetBytes($"'{device_common.Constants.WorkstationCommands.CAPTURE_SCREEN}'"), 200));
         }
 
         static ServiceProvider ConfigureServices(IServiceCollection serviceCollection)
@@ -104,6 +117,7 @@
         {
             try
             {
+
                 ServiceProvider serviceProvider = ConfigureServices(new ServiceCollection());
 
                 _logger = serviceProvider.GetService<ILoggerFactory>().CreateLogger<Program>();

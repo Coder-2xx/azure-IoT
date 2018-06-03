@@ -83,3 +83,4 @@ typings/
 /azIoT.Standard.Common/bin/Release/netstandard2.0
 /azIoT.Standard.Device.Common/bin/Release/netstandard2.0
 /azIoT.Device.MobileApp.sln
+/azIoT.Core.Apps.WebApp

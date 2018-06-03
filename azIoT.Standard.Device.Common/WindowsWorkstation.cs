@@ -4,6 +4,8 @@
     using Microsoft.Extensions.Logging;
     using Microsoft.Win32;
     using System;
+    using System.Drawing;
+    using System.IO;
     using System.Security.Principal;
     using System.Text;
 
@@ -59,6 +61,31 @@
             System.Diagnostics.Process.Start("Rundll32.exe", "User32.dll,ExitWindowsEx,0,0");
         }
 
+        private void CaptureScreen()
+        {
+            Bitmap memoryImage;
+            memoryImage = new Bitmap(1000, 900);
+            Size s = new Size(memoryImage.Width, memoryImage.Height);
+
+            Graphics memoryGraphics = Graphics.FromImage(memoryImage);
+
+            memoryGraphics.CopyFromScreen(0, 0, 0, 0, s);
+
+            string fileName = $"Screenshot_{DateTime.Now.ToString("(dd_MMMM_hh_mm_ss_tt)")}.png";
+
+            memoryImage.Save(fileName);
+
+            //MemoryStream memoryStream = new MemoryStream();
+            //memoryImage.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Png);
+
+            using (var sourceData = new FileStream($"{fileName}", FileMode.Open))
+            {
+                 _deviceClient.UploadToBlobAsync(fileName, sourceData).Wait();
+            }
+
+            //_deviceClient.UploadToBlobAsync($"{fileName}", memoryStream).Wait();
+        }
+
         public WindowsWorkstation(ILoggerFactory loggerFactory)
         {
             this._logger = loggerFactory.CreateLogger<WindowsWorkstation>();
@@ -71,30 +98,24 @@
             SystemEvents.SessionSwitch += new Microsoft.Win32.SessionSwitchEventHandler(OnSessionSwitch);
         }
 
-        public void ExecuteSystemCommand(Message message)
+        public void ExecuteSystemCommand(string command)
         {
-            string commandType = null != message.Properties && message.Properties.ContainsKey("command_type") ? Convert.ToString(message.Properties["command_type"]) : string.Empty;
-
-            if (commandType.Equals("session", StringComparison.InvariantCultureIgnoreCase))
+            switch (command.ToUpper())
             {
-                string sessionIdentity = message.Properties.ContainsKey("session_identity") ? Convert.ToString(message.Properties["session_identity"]) : string.Empty;
+                case Constants.WorkstationCommands.LOGOFF:
+                    Logoff();
+                    break;
 
-                if (sessionIdentity.Equals("all", StringComparison.InvariantCultureIgnoreCase) || sessionIdentity.Equals(this._deviceOwner, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    switch (message.Properties["command"].ToUpper())
-                    {
-                        case "LOGOFF":
-                            Logoff();
-                            break;
+                case Constants.WorkstationCommands.LOCK:
+                    Lock();
+                    break;
 
-                        case "LOCK":
-                            Lock();
-                            break;
+                case Constants.WorkstationCommands.CAPTURE_SCREEN:
+                    CaptureScreen();
+                    break;
 
-                        default:
-                            break;
-                    }
-                }
+                default:
+                    break;
             }
         }
     }

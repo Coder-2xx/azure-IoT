@@ -9,6 +9,6 @@
     {
         void Init(DeviceClient deviceClient);
 
-        void ExecuteSystemCommand(Message message);
+        void ExecuteSystemCommand(string command);
     }
 }

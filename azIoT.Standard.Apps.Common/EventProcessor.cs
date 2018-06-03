@@ -6,6 +6,7 @@
     using System.Collections.Generic;
     using Microsoft.Azure.EventHubs;
     using System.Text;
+    using Microsoft.AspNetCore.SignalR.Client;
 
     public class EventProcessor : IEventProcessor
     {
@@ -29,10 +30,25 @@
 
         public Task ProcessEventsAsync(PartitionContext context, IEnumerable<EventData> messages)
         {
+            var connection = new HubConnectionBuilder()
+           .WithUrl("http://localhost:57065/DevicesHub")
+           .Build();
+
+            connection.StartAsync().Wait();
+
             foreach (var eventData in messages)
             {
-                var data = Encoding.UTF8.GetString(eventData.Body.Array, eventData.Body.Offset, eventData.Body.Count);
-                Console.WriteLine($"Message received. Partition: '{context.PartitionId}', Data: '{data}'");
+                try
+                {
+                    var data = Encoding.UTF8.GetString(eventData.Body.Array, eventData.Body.Offset, eventData.Body.Count);
+                    Console.WriteLine($"Message received. Partition: '{context.PartitionId}', Data: '{data}'");
+
+                    connection.InvokeAsync("SendMessage", data);
+                }
+                catch(Exception exception)
+                {
+
+                }
             }
 
             return context.CheckpointAsync();
