@@ -31,7 +31,7 @@
         public Task ProcessEventsAsync(PartitionContext context, IEnumerable<EventData> messages)
         {
             var connection = new HubConnectionBuilder()
-           .WithUrl("http://localhost:57065/DevicesHub")
+           .WithUrl("https://aziotdevicemanagementwebapi.azurewebsites.net/DevicesHub")
            .Build();
 
             connection.StartAsync().Wait();

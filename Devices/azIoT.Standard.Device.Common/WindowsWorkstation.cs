@@ -61,7 +61,7 @@
             System.Diagnostics.Process.Start("Rundll32.exe", "User32.dll,ExitWindowsEx,0,0");
         }
 
-        private void CaptureScreen()
+        private string CaptureScreen()
         {
             Bitmap memoryImage;
             memoryImage = new Bitmap(1000, 900);
@@ -79,6 +79,7 @@
             {
                 _deviceClient.UploadToBlobAsync(fileName, sourceData).Wait();
             }
+            return fileName;
         }
 
         public WindowsWorkstation(ILoggerFactory loggerFactory)
@@ -106,7 +107,9 @@
                     break;
 
                 case Constants.Workstation.Commands.CAPTURE_SCREEN:
-                    CaptureScreen();
+                    string fileName = CaptureScreen();
+                    Message message = new Message(Encoding.ASCII.GetBytes($"File is uploaded as {fileName} from {_deviceOwner}"));
+                    _deviceClient.SendEventAsync(message).Wait();
                     break;
 
                 default:
